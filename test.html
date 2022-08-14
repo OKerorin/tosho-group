@@ -7,10 +7,10 @@
     <p id="p-status"></p>
     <br>
     <input id="input-sid">
-    <button onclick="setSID">設定</button>
+    <button id="button-sidSet">設定</button>
     <br>
     <br>
-    <button onclick="sendDateData">送信</button>
+    <button id="button-sendDateData">送信</button>
   </body>
 </html>
 <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
@@ -22,19 +22,19 @@
     $("#p-status").html("接続完了");
   });
 
-  function sendDateData() {
+  $("#button-sendDateData").on("click", (e) => {
     if (sid != "") {
       let nowdate = new Date();
       let strdate = nowdate.getFullYear() + "/" + nowdate.getMonth() + "/" + nowdate.getDate() + " " + nowdate.getHours() + ":" + nowdate.getMinutes() + ":" + nowdate.getSeconds() + ":" + nowdate.getMilliseconds();
       ws.send(JSON.stringify({"toS": sid, "message": strdate}));
       $("#p-status").html("送信完了: " + strdate);
     }
-  }
+  });
 
-  function setSID() {
+  $("#button-sidSet").on("click", (e) => {
     let sidstr = $("#input-sid").val();
     if (isNaN(Number(sidstr)) == false) {
       sid = sidstr;
     }
-  }
+  });
 </script>
