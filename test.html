@@ -20,6 +20,7 @@
 
   ws.addEventListener("open", (e)=> {
     $("#p-status").html("接続完了");
+    ws.send(JSON.stringify({"auth": Math.random().toString(32).substring(2), "password": Math.random().toString(32).substring(2)}));
   });
 
   $("#button-sendDateData").on("click", (e) => {
