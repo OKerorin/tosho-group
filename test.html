@@ -57,10 +57,11 @@
     }
   });
 
+  var repeatSendInterval;
   $("#button-repeatSendDateData").on("click", () => {
     repeatSend = !repeatSend;
     if (repeatSend == true) {
-      var repeatSendInterval = setInterval(() => {
+      repeatSendInterval = setInterval(() => {
         $("#button-sendDateData").click();
       }, 1200);
     } else {
