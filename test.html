@@ -11,6 +11,7 @@
     <br>
     <br>
     <button id="button-sendDateData">送信</button>
+    <button id="button-repeatSendDateData">繰り返し送信</button>
   </body>
 </html>
 <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
@@ -21,6 +22,7 @@
   var sid = "";
   var wsAuth = Math.random().toString(32).substring(2);
   var wsPassword = Math.random().toString(32).substring(2);
+  var repeatSend = false;
 
   function wsConnect() {
     ws = new WebSocket(wsUri);
@@ -52,6 +54,17 @@
     let sidstr = $("#input-sid").val();
     if (isNaN(Number(sidstr)) == false) {
       sid = sidstr;
+    }
+  });
+
+  $("#button-repeatSendDateData").on("click", () => {
+    repeatSend = !repeatSend;
+    if (repeatSend == true) {
+      var repeatSendInterval = setInterval(() => {
+        $("#button-sendDateData").click();
+      }, 1200);
+    } else {
+      clearInterval(repeatSendInterval);
     }
   });
 
