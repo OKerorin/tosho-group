@@ -26,7 +26,7 @@
   $("#button-sendDateData").on("click", (e) => {
     if (sid != "") {
       let nowdate = new Date();
-      let strdate = nowdate.getFullYear() + "/" + nowdate.getMonth() + "/" + nowdate.getDate() + " " + nowdate.getHours() + ":" + nowdate.getMinutes() + ":" + nowdate.getSeconds() + ":" + nowdate.getMilliseconds();
+      let strdate = nowdate.getFullYear() + "/" + (Number(nowdate.getMonth() + 1)).toString() + "/" + nowdate.getDate() + " " + nowdate.getHours() + ":" + nowdate.getMinutes() + ":" + nowdate.getSeconds() + "." + nowdate.getMilliseconds();
       ws.send(JSON.stringify({"toS": sid, "message": strdate}));
       $("#p-status").html("送信完了: " + strdate);
     }
