@@ -3,15 +3,36 @@
     <title>kerotyan-git-test-website</title> 
   </head>
   <body>
-    <h1>hello!!!</h1>
-    <p id="p-count"></p>
+    <p id="p-status"></p>
+    <br>
+    <input id="input-sid">
+    <button onclick="setSID">設定</button>
+    <br>
+    <br>
+    <button onclick="sendDateData">送信</button>
   </body>
 </html>
 <script>
-  const p_count = document.getElementById("p-count");
-  var count = 0;
-  setInterval(()=>{
-    count++;
-    p_count.innerHTML = count;
-  }, 1000);
+  const ws = new WebSocket("wss://cloud.achex.ca");
+  var sid = "";
+
+  ws.addEventListener("open", (e)=> {
+    $("#p-status").html("接続完了");
+  });
+
+  function sendDateData() {
+    if (sid != "") {
+      let nowdate = new Date();
+      let strdate = nowdate.getFullYear() + "/" + nowdate.getMonth() + "/" + nowdate.getDate() + " " + nowdate.getHours() + ":" + nowdate.getMinutes() + ":" + nowdate.getSeconds() + ":" + nowdate.getMilliseconds();
+      ws.send(JSON.stringify({"toS": sid, "message": strdate}));
+      $("#p-status").html("送信完了: " + strdate);
+    }
+  }
+
+  function setSID() {
+    let sidstr = $("#input-sid").val();
+    if (isNaN(Number(sidstr)) == false) {
+      sid = sidstr;
+    }
+  }
 </script>
