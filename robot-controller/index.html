@@ -145,11 +145,12 @@ Joystick Controls.
 
 	let joystick1 = new JoystickController("stick1", 128, 8);
 	let previousValue = {};
+	let hub;
 
 	function update()
 	{
-		if (previousValue != joystick1.value) {
-			let presentValue = joystick1.value;
+		let presentValue = joystick1.value;
+		if (previousValue != presentValue) {
 			document.getElementById("status1").innerText = "Joystick 1: " + JSON.stringify(presentValue);
 			let speed = Math.floor(100 * (((presentValue["x"] ** 2) + (presentValue["y"] ** 2)) ** 0.5));
 			let rotationSpeed = Math.floor(180 * (Math.atan2(presentValue["y"], presentValue["x"]) / Math.PI));
@@ -157,7 +158,6 @@ Joystick Controls.
 			
 			previousValue = presentValue;
         }
-		
 	}
 
 	function loop()
@@ -168,7 +168,6 @@ Joystick Controls.
 
 	loop();
 
-	var hub;
 	window.onload = async () => {
 		hub = new signalR.HubConnectionBuilder()
 		.withUrl("https://robotcontrollerserver-26hrcaue3q-an.a.run.app")
