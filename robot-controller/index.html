@@ -172,6 +172,7 @@ Joystick Controls.
 	window.onload = async () => {
 		hub = new signalR.HubConnectionBuilder()
 		.withUrl("https://robotcontrollerserver-26hrcaue3q-an.a.run.app")
+		.configureLogging(signalR.LogLevel.None)
 		.withAutomaticReconnect()
 		.build();
 
