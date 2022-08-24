@@ -146,11 +146,12 @@ Joystick Controls.
 	let joystick1 = new JoystickController("stick1", 128, 8);
 	let previousValue = {"x": 0, "y": 0};
 	let hub;
+	let controllerReady = false;
 
 	function update()
 	{
 		let presentValue = joystick1.value;
-		if (previousValue != presentValue) {
+		if (previousValue != presentValue && controllerReady == true) {
 			document.getElementById("status1").innerText = "Joystick 1: " + JSON.stringify(presentValue);
 			let speed = Math.floor(100 * (((presentValue["x"] ** 2) + (presentValue["y"] ** 2)) ** 0.5));
 			let rotationSpeed = Math.floor(180 * (Math.atan2(presentValue["y"], presentValue["x"]) / Math.PI));
@@ -203,6 +204,7 @@ Joystick Controls.
 		}
 		
 		await hub.invoke("AddControllerToGroup", "kero3", "kerocontroller");
+		controllerReady = true;
 	}
 </script>
 
