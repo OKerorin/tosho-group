@@ -31,7 +31,7 @@ Joystick Controls.
 	</div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@6.0.8/dist/webworker/signalr.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.8/signalr.js" integrity="sha512-s8u0pCyGjfko6EvYqd1ZszzY5vIQYhdW15zsrMyYBSIza6kHaYey+enyBCajR7wcyA7Lfgk0TzJ0Ai8blQJ3zA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 
 	class JoystickController
@@ -144,7 +144,7 @@ Joystick Controls.
 	}
 
 	let joystick1 = new JoystickController("stick1", 128, 8);
-	let previousValue = {};
+	let previousValue = {"x": 0, "y": 0};
 	let hub;
 
 	function update()
