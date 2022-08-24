@@ -31,7 +31,7 @@ Joystick Controls.
 	</div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.8/signalr.js" integrity="sha512-s8u0pCyGjfko6EvYqd1ZszzY5vIQYhdW15zsrMyYBSIza6kHaYey+enyBCajR7wcyA7Lfgk0TzJ0Ai8blQJ3zA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@6.0.8/dist/webworker/signalr.js"></script>
 <script>
 
 	class JoystickController
@@ -151,6 +151,10 @@ Joystick Controls.
 		if (previousValue != joystick1.value) {
 			let presentValue = joystick1.value;
 			document.getElementById("status1").innerText = "Joystick 1: " + JSON.stringify(presentValue);
+			let speed = Math.floor(100 * (((presentValue["x"] ** 2) + (presentValue["y"] ** 2)) ** 0.5));
+			let rotationSpeed = Math.floor(180 * (Math.atan2(presentValue["y"], presentValue["x"]) / Math.PI));
+			hub.invoke("SendRobotOperationData", speed, rotationSpeed);
+			
 			previousValue = presentValue;
         }
 		
@@ -187,6 +191,10 @@ Joystick Controls.
 			console.log("RobotDisconnected: " + robotName);
 		});
 
+		hub.onreconnected(connectionId => {
+			await hub.invoke("AddControllerToGroup", "kero3", "kerocontroller");
+		});
+
 		try {
 			await hub.start();
 			console.log("Connected!");
@@ -194,7 +202,6 @@ Joystick Controls.
 			console.log("failed!");
 		}
 		
-
 		await hub.invoke("AddControllerToGroup", "kero3", "kerocontroller");
 	}
 </script>
