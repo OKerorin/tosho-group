@@ -23,7 +23,7 @@ RobotController
 <label for="input-groupName">グループ名: </label>
 <input type="text" id="input-groupName" required minlength="1">
 <br>
-<button>適用</button>
+<button onclick="groupNameApplyOnClick">適用</button>
 <br>
 <div style="width: 256px; height: 256px; position: absolute; left:50%; top:50%; transform: translate(-50%, -50%)">
 	<svg height="256" width="256">
@@ -216,11 +216,13 @@ RobotController
 			return;
 		}
 
-		try {
-			await hub.start();
-			console.log("Connected");
-		} catch {
-			console.log("StartConnection Failed");
+		if (hub.state != signalR.HubConnectionState.Connected) {
+			try {
+				await hub.start();
+				console.log("Connected");
+			} catch {
+				console.log("StartConnection Failed");
+			}
 		}
 		
 		if (groupName.length < 0) {
