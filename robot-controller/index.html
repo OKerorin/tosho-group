@@ -15,11 +15,16 @@
 
 <body>
 
-Joystick Controls.
+RobotController
 <hr>
-<div id="status1" style="color: red;">Joystick 1</div>
+<div id="div-groupName">GroupName: </div>
+<hr>
 
-<hr>
+<label for="input-groupName">グループ名: </label>
+<input type="text" id="input-groupName" required minlength="1">
+<br>
+<button>適用</button>
+<br>
 <div style="width: 256px; height: 256px; position: absolute; left:50%; top:50%; transform: translate(-50%, -50%)">
 	<svg height="256" width="256">
 		<circle cx="128" cy="128" r="128" fill="#cccccc" />
@@ -147,12 +152,12 @@ Joystick Controls.
 	let previousValue = {"x": 0, "y": 0};
 	let hub;
 	let controllerReady = false;
+	let groupName;
 
 	function update()
 	{
 		let presentValue = joystick1.value;
 		if (previousValue != presentValue && controllerReady == true) {
-			document.getElementById("status1").innerText = "Joystick 1: " + JSON.stringify(presentValue);
 			let speed = Math.floor(100 * (((presentValue["x"] ** 2) + (presentValue["y"] ** 2)) ** 0.5));
 			let rotationSpeed = Math.floor(180 * (Math.atan2(presentValue["y"], presentValue["x"]) / Math.PI));
 			hub.invoke("SendRobotOperationData", speed, rotationSpeed);
@@ -169,7 +174,7 @@ Joystick Controls.
 
 	loop();
 
-	window.onload = async () => {
+	window.onload = () => {
 		hub = new signalR.HubConnectionBuilder()
 		.withUrl("https://robotcontrollerserver-26hrcaue3q-an.a.run.app")
 		.configureLogging(signalR.LogLevel.None)
@@ -192,19 +197,49 @@ Joystick Controls.
 			console.log("RobotDisconnected: " + robotName);
 		});
 
-		hub.onreconnected(connectionId => {
-			hub.invoke("AddControllerToGroup", "kero3", "kerocontroller");
+		hub.onreconnecting(error => {
+			controllerReady = false;
 		});
+
+		hub.onreconnected(async connectionId => {
+			controllerReady = true;
+			await hub.invoke("AddControllerToGroup", groupName, groupName + "Controller");
+			document.getElementById("div-groupName").innerText = "GroupName: " + groupName;
+		});
+	}
+
+	async function StartConnection() {
+		controllerReady = false;
+
+		if (hub == null) {
+			console.log("hub instance is not created.");
+			return;
+		}
 
 		try {
 			await hub.start();
-			console.log("Connected!");
+			console.log("Connected");
 		} catch {
-			console.log("failed!");
+			console.log("StartConnection Failed");
 		}
 		
-		await hub.invoke("AddControllerToGroup", "kero3", "kerocontroller");
+		if (groupName.length < 0) {
+			console.log("GroupName is empty.");
+			return;
+		}
+
+		await hub.invoke("AddControllerToGroup", groupName, groupName + "Controller");
 		controllerReady = true;
+	}
+
+	async function groupNameApplyOnClick() {
+		groupName = document.getElementById("input-groupName").value;
+		if (groupName.length < 0) {
+			console.log("GroupName is empty.");
+			return;
+		}
+		await StartConnection();
+		document.getElementById("div-groupName").innerText = "GroupName: " + groupName;
 	}
 </script>
 
