@@ -154,8 +154,13 @@ RobotController
 	let hub;
 	let controllerReady = false;
 	let groupName;
-	//let robotControlServerUrl = "https://robotcontrollerserver-26hrcaue3q-an.a.run.app";
-	let robotControlServerUrl = "https://localhost:7180";
+	let robotControlServerUrl;
+
+	if (location.hostname == "okerorin.github.io") {
+		robotControlServerUrl = "https://robotcontrollerserver-26hrcaue3q-an.a.run.app";
+	} else {
+		robotControlServerUrl = "https://localhost:7180";
+	}
 
 	function update()
 	{
