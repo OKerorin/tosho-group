@@ -3,6 +3,7 @@
 
 <head>
 	<title>Joystick Controls</title>
+	<meta charset="utf-8">
 	<style>
 		body {
 			font-family: Courier, monospaced;
@@ -153,6 +154,8 @@ RobotController
 	let hub;
 	let controllerReady = false;
 	let groupName;
+	//let robotControlServerUrl = "https://robotcontrollerserver-26hrcaue3q-an.a.run.app";
+	let robotControlServerUrl = "https://localhost:7180";
 
 	function update()
 	{
@@ -176,7 +179,7 @@ RobotController
 
 	window.onload = () => {
 		hub = new signalR.HubConnectionBuilder()
-		.withUrl("https://robotcontrollerserver-26hrcaue3q-an.a.run.app")
+		.withUrl(robotControlServerUrl)
 		.configureLogging(signalR.LogLevel.None)
 		.withAutomaticReconnect()
 		.build();
@@ -187,6 +190,11 @@ RobotController
 
 		hub.on("Error", (errorContent) => {
 			console.log(errorContent);
+
+			if (errorContent == "THIS_CONTROLLER_REMOVED") {
+				controllerReady = false;
+				groupName = "";
+			}
 		});
 
 		hub.on("RobotRemoved", (robotName) => {
@@ -198,12 +206,17 @@ RobotController
 		});
 
 		hub.onreconnecting(error => {
+			console.log("Reconnecting...");
 			controllerReady = false;
 		});
 
 		hub.onreconnected(async connectionId => {
 			controllerReady = true;
-			await hub.invoke("AddControllerToGroup", groupName, groupName + "Controller");
+			if (groupName.length < 0) {
+				console.log("GroupName is empty.");
+				return;
+			}
+			await hub.invoke("AddControllerToGroupForced", groupName, groupName + "Controller");
 			document.getElementById("div-groupName").innerText = "GroupName: " + groupName;
 		});
 	}
@@ -240,8 +253,37 @@ RobotController
 			console.log("GroupName is empty.");
 			return;
 		}
+
+		if (checkSafetyString(groupName) == false) {
+			console.log("GroupName contains invalid char");
+			return;
+		}
+
 		await StartConnection();
 		document.getElementById("div-groupName").innerText = "GroupName: " + groupName;
+	}
+
+	function checkSafetyString(str) {
+		if (str.length == 0) {
+			return true;
+		}
+
+		let availableChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		for (let i = 0; i < str.length; i++) {
+			let availableCharFind = false;
+			for (let j = 0; j < availableChars.length; j++) {
+				if (str[i] == availableChars[j]) {
+					availableCharFind = true;
+					break;
+				}
+			}
+
+			if (availableCharFind == false) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 </script>
 
