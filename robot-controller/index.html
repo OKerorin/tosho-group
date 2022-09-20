@@ -62,8 +62,17 @@
 </div>
 <hr>
 
-<label for="input-groupName">グループ名: </label>
+<div style="display: flex; align-items: center;">
+<label for="input-groupName">グループ名:&nbsp;</label>
 <input type="text" id="input-groupName" required minlength="1">
+
+<div style="background-color: black; width: 30px; height: 55px; border-radius: 15px; margin-left: auto; color: white; user-select: none;" onclick="switchDirection()">
+	<div style="position: relative; top: -1.25px; left: 0px; width: 30px; line-height: 30px; text-align: center;">後</div>
+	<div style="position: relative; top: -3.75px; left: 0px; width: 30px; line-height: 30px; text-align: center;">前</div>
+	<div style="width: 25px; height: 25px; border-radius: 12.5px; background-color: white; position: relative; top: -57.5px; left: 2.5px;" id="div-directionSwitch"></div>
+</div>
+
+</div>
 <br>
 <button onclick="groupNameApplyOnClick()">適用</button>
 <br>
@@ -210,6 +219,11 @@
 		if (previousValue != presentValue && controllerReady == true) {
 			let speed = Math.floor(100 * (((presentValue["x"] ** 2) + (presentValue["y"] ** 2)) ** 0.5));
 			let rotationSpeed = Math.floor(180 * (Math.atan2(presentValue["y"], presentValue["x"]) / Math.PI));
+
+			if (isForward == false) {
+				speed *= -1;
+			}
+			
 			hub.invoke("SendRobotOperationData", speed, rotationSpeed);
 			
 			previousValue = presentValue;
@@ -239,6 +253,7 @@
 
 		hub.on("Error", (errorContent) => {
 			if (errorContent != "NOT_CONTROLLER") {
+				displayStatus("接続されていません");
 				createNotification("エラーが発生しました<br>エラーコード: " + errorContent);
 			}
 			
@@ -403,6 +418,18 @@
 
 	function displayStatus(text) {
 		document.getElementById("div-status").innerText = text;
+	}
+
+	let isForward = true;
+	function switchDirection() {
+		let switchElement = document.getElementById("div-directionSwitch");
+		if (isForward == true) {
+			isForward = false;
+			switchElement.style.top = "-32.5px";
+		} else {
+			isForward = true;
+			switchElement.style.top = "-57.5px";
+		}
 	}
 </script>
 <script>
