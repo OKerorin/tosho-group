@@ -1,24 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 
 <head>
 	<title>Joystick Controls</title>
 	<meta charset="utf-8">
 	<style>
-		body {
-			font-family: Courier, monospaced;
-			font-size: 16px;
+		.letter-emphasize {
 			font-weight: bold;
+			font-size: 16px;
+		}
+
+		#div-notification {
+			animation-duration: 0.5s;
+  			animation-name: notification-in-from-top;
+			width: 100%; 
+			background-color: black; 
+			position: absolute; 
+			top: 0px; 
+			left: 0px; 
+			color: white; 
+			opacity: 0.9;
+			animation-fill-mode: forwards;
+		}
+
+		#div-connection-details > div > p {
+			margin: 0;
+		}
+
+		@keyframes notification-in-from-top {
+			from {
+				transform: translateY(-100%);
+			}
+
+			to {
+				transform: translateY(0%);
+			}
+		}
+
+		@keyframes notification-out-to-top {
+			from {
+				transform: translateY(0%);
+			}
+
+			to {
+				transform: translateY(-100%);
+			}
 		}
 	</style>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
+<div class="letter-emphasize">ロボットコントローラー</div>
 
-RobotController
 <hr>
-<div id="div-groupName">GroupName: </div>
+<div style="display: flex;">
+<div class="letter-emphasize">グループ名:</div><div id="div-groupName"></div>
+</div>
+<div style="display: flex;">
+<div class="letter-emphasize">接続状態:</div><div>接続されています</div><div style="margin-left: auto;"><a href="#" onclick="showDetails()">詳細を表示</a></div>
+</div>
 <hr>
 
 <label for="input-groupName">グループ名: </label>
@@ -26,7 +67,7 @@ RobotController
 <br>
 <button onclick="groupNameApplyOnClick()">適用</button>
 <br>
-<div style="width: 256px; height: 256px; position: absolute; left:50%; top:50%; transform: translate(-50%, -50%)">
+<div id="div-controller" style="width: 256px; height: 256px; position: absolute; left:50%; top:50%; transform: translate(-50%, -50%)">
 	<svg height="256" width="256">
 		<circle cx="128" cy="128" r="128" fill="#cccccc" />
 	</svg>
@@ -36,8 +77,8 @@ RobotController
 		</svg>
 	</div>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.8/signalr.js" integrity="sha512-s8u0pCyGjfko6EvYqd1ZszzY5vIQYhdW15zsrMyYBSIza6kHaYey+enyBCajR7wcyA7Lfgk0TzJ0Ai8blQJ3zA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
 <script>
 
 	class JoystickController
@@ -155,6 +196,7 @@ RobotController
 	let controllerReady = false;
 	let groupName;
 	let robotControlServerUrl;
+	let robotsInGroup = [];
 
 	if (location.hostname == "okerorin.github.io") {
 		robotControlServerUrl = "https://robotcontrollerserver-26hrcaue3q-an.a.run.app";
@@ -190,10 +232,16 @@ RobotController
 		.build();
 
 		hub.on("RobotAdded", (robotName) => {
+			robotsInGroup.push(robotName);
+			createNotification("ロボット名: " + robotName + " がグループ内に追加されました");
 			console.log("RobotName: " + robotName);
 		});
 
 		hub.on("Error", (errorContent) => {
+			if (errorContent != "NOT_CONTROLLER") {
+				createNotification("エラーが発生しました<br>エラーコード: " + errorContent);
+			}
+			
 			console.log(errorContent);
 
 			if (errorContent == "THIS_CONTROLLER_REMOVED") {
@@ -202,15 +250,27 @@ RobotController
 			}
 		});
 
+		hub.on("GroupInfo", (groupInfoStr) => {
+			groupInfo = JSON.parse(groupInfoStr);
+			robotsInGroup = groupInfo["connected_robot_names"];
+			createNotification("通信の準備が完了しました<br>グループ名: " + groupName + "<br>コントローラー名: " + groupName + "Controller");
+			console.log(groupInfo);
+		});
+
 		hub.on("RobotRemoved", (robotName) => {
+			removeRobotName(robotName);
+			createNotification("ロボット名: " + robotName + " がグループ内から退出しました");
 			console.log("RobotRemoved: " + robotName);
 		});
 
 		hub.on("RobotDisconnected", (robotName) => {
+			removeRobotName(robotName);
+			createNotification("ロボット名: " + robotName + " の接続が切断されました");
 			console.log("RobotDisconnected: " + robotName);
 		});
 
 		hub.onreconnecting(error => {
+			createNotification("接続が切断されました 再接続しています");
 			console.log("Reconnecting...");
 			controllerReady = false;
 		});
@@ -222,7 +282,8 @@ RobotController
 				return;
 			}
 			await hub.invoke("AddControllerToGroupForced", groupName, groupName + "Controller");
-			document.getElementById("div-groupName").innerText = "GroupName: " + groupName;
+			document.getElementById("div-groupName").innerText = groupName;
+			createNotification("サーバーへの再接続が完了し<br>グループ名: " + groupName + " に参加しました");
 		});
 	}
 
@@ -237,13 +298,15 @@ RobotController
 		if (hub.state != signalR.HubConnectionState.Connected) {
 			try {
 				await hub.start();
+				createNotification(robotControlServerUrl + "へ接続されました");
 				console.log("Connected");
 			} catch {
+				createNotification(robotControlServerUrl + "へ接続できません");
 				console.log("StartConnection Failed");
 			}
 		}
 		
-		if (groupName.length < 0) {
+		if (groupName.length == 0) {
 			console.log("GroupName is empty.");
 			return;
 		}
@@ -254,18 +317,20 @@ RobotController
 
 	async function groupNameApplyOnClick() {
 		groupName = document.getElementById("input-groupName").value;
-		if (groupName.length < 0) {
+		if (groupName.length == 0) {
+			createNotification("グループ名が空です");
 			console.log("GroupName is empty.");
 			return;
 		}
 
 		if (checkSafetyString(groupName) == false) {
+			createNotification("グループ名に不正な文字が含まれています");
 			console.log("GroupName contains invalid char");
 			return;
 		}
 
 		await StartConnection();
-		document.getElementById("div-groupName").innerText = "GroupName: " + groupName;
+		document.getElementById("div-groupName").innerText = groupName;
 	}
 
 	function checkSafetyString(str) {
@@ -290,7 +355,88 @@ RobotController
 
 		return true;
 	}
-</script>
 
+	function removeRobotName(robotName) {
+		for (let i = 0; i < robotsInGroup.length; i++) {
+			if (robotsInGroup[i] == robotName) {
+				robotsInGroup.splice(i,1);
+				return;
+			}
+		}
+	}
+
+	let notificationWaiter = [];
+	async function createNotification(text, showSeconds) {
+		let notificationId = createRandomString(10);
+		notificationWaiter.push(notificationId);
+
+		while (true) {
+			if (notificationWaiter[0] == notificationId) {
+				break;
+			} else {
+				await new Promise(s => setTimeout(s, 100));
+			}
+		}
+
+		document.body.insertAdjacentHTML("beforeend",`<div id="div-notification"><p style="width: 80%; position: relative; left: 50%; transform: translateX(-50%);">` + text + `</p><hr></div>`);
+		await new Promise(s => setTimeout(s, 5000));
+		notification = document.getElementById("div-notification");
+		notification.style.animationName = "notification-out-to-top";
+		await new Promise(s => setTimeout(s, 600));
+		notification.remove();
+		notificationWaiter.splice(0, 1);
+	}
+
+	function createRandomString(len) {
+		let availableChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		let resultString = "";
+		for (let i = 0; i < len; i++) {
+			resultString += availableChars[Math.floor(Math.random() * (availableChars.length))];
+		}
+		return resultString;
+	}
+</script>
+<script>
+	let ua = navigator.userAgent;
+	let noKeyBoardWindowHeight = window.innerHeight;
+
+	if (ua.indexOf("Android") > 0 || ua.indexOf("iPhone") > 0 || ua.indexOf("iPad") > 0 || ua.indexOf("Mobile") > 0) {
+		window.addEventListener("resize", () => {
+			
+			if (noKeyBoardWindowHeight == window.innerHeight) {
+				document.getElementById("div-controller").style.transform = "translate(-128px, -128px)";
+				return;
+			}
+
+			let keyboardHeight = noKeyBoardWindowHeight - innerHeight;
+			document.getElementById("div-controller").style.transform = "translate(-128px, " + ((keyboardHeight / 2) + -128).toString() + "px)";
+		});
+	}
+
+	function showDetails() {
+		let displayGroupName;
+		let displayControllerName;
+		if (groupName == "" || groupName == undefined) {
+			displayGroupName = "[未設定]";
+			displayControllerName = "[未設定]";
+		} else {
+			displayGroupName = groupName;
+			displayControllerName = groupName + "Controller";
+		}
+
+		let connectedRobotNamesHTML = '<div id="div-connection-details"><div style="display: flex; align-items: center"><p class="letter-emphasize">グループ名: </p><p>' + displayGroupName + '</p></div>';
+		connectedRobotNamesHTML += '<div style="display: flex; align-items: center"><p class="letter-emphasize">コントローラー名: </p><p>' + displayControllerName + '</p></div></div><br>';
+		connectedRobotNamesHTML += '<div class="letter-emphasize">グループ内のロボット</div><hr>';
+		for (let i = 0; i < robotsInGroup.length; i++) {
+			connectedRobotNamesHTML += "<p>" + robotsInGroup[i] + "</p>";
+		}
+		connectedRobotNamesHTML += "<hr>";
+
+		swal.fire({
+                title: '接続状態の詳細',
+                html: connectedRobotNamesHTML
+            });
+	}
+</script>
 </body>
 </html>
