@@ -58,7 +58,7 @@
 <div class="letter-emphasize">グループ名:</div><div id="div-groupName"></div>
 </div>
 <div style="display: flex;">
-<div class="letter-emphasize">接続状態:</div><div>接続されています</div><div style="margin-left: auto;"><a href="#" onclick="showDetails()">詳細を表示</a></div>
+<div class="letter-emphasize">接続状態:</div><div id="div-status">接続されています</div><div style="margin-left: auto;"><a href="#" onclick="showDetails()">詳細を表示</a></div>
 </div>
 <hr>
 
@@ -245,6 +245,7 @@
 			console.log(errorContent);
 
 			if (errorContent == "THIS_CONTROLLER_REMOVED") {
+				displayStatus("接続されていません");
 				controllerReady = false;
 				groupName = "";
 			}
@@ -270,6 +271,7 @@
 		});
 
 		hub.onreconnecting(error => {
+			displayStatus("再接続しています");
 			createNotification("接続が切断されました 再接続しています");
 			console.log("Reconnecting...");
 			controllerReady = false;
@@ -283,6 +285,7 @@
 			}
 			await hub.invoke("AddControllerToGroupForced", groupName, groupName + "Controller");
 			document.getElementById("div-groupName").innerText = groupName;
+			displayStatus("接続されています");
 			createNotification("サーバーへの再接続が完了し<br>グループ名: " + groupName + " に参加しました");
 		});
 	}
@@ -298,9 +301,11 @@
 		if (hub.state != signalR.HubConnectionState.Connected) {
 			try {
 				await hub.start();
+				displayStatus("接続されています");
 				createNotification(robotControlServerUrl + "へ接続されました");
 				console.log("Connected");
 			} catch {
+				displayStatus("接続できません");
 				createNotification(robotControlServerUrl + "へ接続できません");
 				console.log("StartConnection Failed");
 			}
@@ -394,6 +399,10 @@
 			resultString += availableChars[Math.floor(Math.random() * (availableChars.length))];
 		}
 		return resultString;
+	}
+
+	function displayStatus(text) {
+		document.getElementById("div-status").innerText = text;
 	}
 </script>
 <script>
