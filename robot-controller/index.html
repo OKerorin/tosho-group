@@ -226,7 +226,7 @@
 
 		if (previousValue != presentValue && controllerReady == true) {
 			let speed = Math.floor(100 * (((presentValue["x"] ** 2) + (presentValue["y"] ** 2)) ** 0.5));
-			let rotationSpeed = (Math.floor(180 * (Math.atan2(presentValue["y"], presentValue["x"]) / Math.PI)) + 360) % 360;
+			let rotationSpeed = Math.floor(180 * (Math.atan2(presentValue["y"], presentValue["x"]) / Math.PI));
 
 			if (isForward == false) {
 				speed *= -1;
