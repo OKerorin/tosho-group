@@ -218,7 +218,7 @@
 		let presentValue = joystick1.value;
 		if (previousValue != presentValue && controllerReady == true) {
 			let speed = Math.floor(100 * (((presentValue["x"] ** 2) + (presentValue["y"] ** 2)) ** 0.5));
-			let rotationSpeed = Math.floor(180 * (Math.atan2(presentValue["x"], presentValue["y"]) / Math.PI));
+			let rotationSpeed = (Math.floor(180 * (Math.atan2(-1 * presentValue["x"], -1 * presentValue["y"]) / Math.PI)) + 360) % 360;
 
 			if (isForward == false) {
 				speed *= -1;
